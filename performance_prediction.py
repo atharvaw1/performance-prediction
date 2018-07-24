@@ -4,28 +4,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-def result_to_html(x):
+def excel_to_np(pathname=r'Data/6-A 2015-16.xlsx',sheet='Sheet1'):
 
-    '''Function to convert the obtained result numpy matrix into a html format required'''
-
-    array = [['English','Kannada','Hindi','Maths','Science','Social Science','Phy and Health','Art Education'],['fa1','fa2','fa3','fa4','sa1','sa2']]
-    col_index = pd.MultiIndex.from_product(array,names=['Subject',''])
-    row_index = list(map(str,range(1,len(x)+1)))
-    row_index  = ['8a'+x for x in row_index]
-    df = pd.DataFrame(x,index=row_index,columns=col_index)
-    df = df.stack()
-    cols = df.columns.tolist()
-    cols = cols[1:]+cols[:1]
-    df = df[cols]
-    df = df.round(2)
-    #print(df)
-    df.to_html('result.html',col_space=5)
-
-
-
-def excel_to_np(pathname=r'SAMPLE Performance DATA SCS/class 6-A(2016-2017).xlsx',sheet='Sheet1'):
-
-    '''Fucntion to extract and convert the given data from excel to numpy array'''
+    '''Function to extract and convert the given data from excel to numpy array'''
     #Read the excel file using pandas for easier data manipulation
     df = pd.read_excel(pathname,sheet_name=sheet,header=[0,1])
     #Drop the columns and rows with no data
@@ -45,6 +26,7 @@ def excel_to_np(pathname=r'SAMPLE Performance DATA SCS/class 6-A(2016-2017).xlsx
     df=df[(df.EVALUATION !='Total') & (df.EVALUATION!= 'GrandTotal')]
     #Pivot the data to extend into suitable format
     df = df.pivot(index=df.index,columns='EVALUATION')
+    #Replacing unknown values with 0
     df.replace(to_replace='--',value=0,inplace=True)
     #convert the dataframe into numpy array
     x = np.array(df.values.tolist())
@@ -77,7 +59,7 @@ def split(x1,x2,y,p=1,shuffle=False):
 
 
 def normalize(x):
-    '''Function to normalize the data between values 0 ad 1 to speed up learning'''
+    '''Function to normalize the data between values 0 and 1 to speed up learning'''
     #Normalization is done by subtracting mean and dividing by std. deviation for each value
     mu = np.mean(x,axis=1)
     sigma = np.std(x,axis=1)
@@ -91,7 +73,6 @@ def normalize(x):
 
 def train_data_GD(x_train,y_train,learning_rate,epoch,l):
     '''Function to train parameters using Gradient Descent'''
-
 
     no_of_samples=x_train.shape[0]
     no_of_features=y_train.shape[1]
@@ -192,10 +173,31 @@ def optimize_hyperparameters(x1,x2,y,lr=False,r=False):
             cost_list.append(cost)
 
     #Plot the learning rate vs cost of test set
+    print(cost_list)
     plt.scatter(parameter,cost_list)
     plt.xlabel('Learning Rate')
     plt.ylabel('Cost')
     plt.show()
+
+
+
+def result_to_html(x):
+
+    '''Function to convert the obtained result numpy matrix into a html format required'''
+
+    array = [['English','Kannada','Hindi','Maths','Science','Social Science','Phy and Health','Art Education'],['fa1','fa2','fa3','fa4','sa1','sa2']]
+    col_index = pd.MultiIndex.from_product(array,names=['Subject',''])
+    row_index = list(map(str,range(1,len(x)+1)))
+    row_index  = ['8a'+x for x in row_index]
+    df = pd.DataFrame(x,index=row_index,columns=col_index)
+    df = df.stack()
+    cols = df.columns.tolist()
+    cols = cols[1:]+cols[:1]
+    df = df[cols]
+    df = df.round(2)
+    #print(df)
+    df.to_html('result.html',col_space=5)
+
 
 
 
@@ -214,15 +216,14 @@ y2 = excel_to_np(r'Data/8-B 2017-18.xlsx')
 y3 = excel_to_np(r'Data/8-C 2017-18.xlsx')
 y = merge(y1,y2,y3)
 
-optimize_hyperparameters(x1,x2,y,r=True)
-'''
-x_train,x_test,y_train,y_test = split(x1,x2,y,p=0.8,shuffle=True)
+#optimize_hyperparameters(x1,x2,y,r=True)
+
+x_train,x_test,y_train,y_test = split(x1,x2,y,p=1,shuffle=False)
 #print(x_train.shape,x_test.shape,y_train.shape,y_test.shape)
 x_train = normalize(x_train)
 y_train = normalize(y_train)
 
-W1,W2,b = train_data_GD(x_train,y_train,0.001,1000,1)
+W1,W2,b = train_data_GD(x_train,y_train,0.001,700,1)
 
-result = predict(x_train,W1,W2,b,y_test=y_train,test=False)
+result = predict(x_test,W1,W2,b,y_test=y_test,test=False)
 result_to_html(result)
-'''
